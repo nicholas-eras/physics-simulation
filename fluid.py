@@ -23,16 +23,16 @@ grids = []
 waters = []
 
 def move_water_blocks():
-    for water_index, water in enumerate(waters):
+    occupied_position = {(water.x, water.y) for water in waters}
+
+    for water in waters:
         move_water = True
+
         if water.y + grid_size == height:
             move_water = False   
-        
-        if water_index > 0:
-            for water_below in waters:
-                if water_below != water:
-                    if water.y + grid_size == water_below.y and water.x == water_below.x:
-                        move_water = False
+                
+        if ((water.x, water.y + grid_size) in occupied_position):
+            move_water = False
 
         if move_water:
             water.y += grid_size
