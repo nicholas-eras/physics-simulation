@@ -37,13 +37,19 @@ def move_water_blocks():
 
         if water.y + grid_size == height:
             move_water_vertically = False
-            
+
         if water.x == 0 or water.x + grid_size == width:
             move_water_horizontally = False   
                 
         if ((water.x, water.y + grid_size) in occupied_position):
             move_water_vertically = False
-            if ((water.x + grid_size, water.y) not in occupied_position):
+            if (water.x +water.direction* grid_size, water.y) not in occupied_position:
+                if water.direction == 1:
+                    if water.x +water.direction* grid_size >= width:
+                        continue
+                if water.direction == -1:
+                    if water.x +water.direction* grid_size < 0:
+                        continue
                 move_water_horizontally = True
 
         if move_water_vertically:
@@ -83,12 +89,13 @@ while running:
             running = False
         elif event.type == pygame.MOUSEMOTION:
             mouse_pos = event.pos
-        elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE:
-                column = mouse_pos[0] // grid_size
-                row = mouse_pos[1] // grid_size
-                water = Water(grid_size * column, grid_size * row, grid_size)
-                waters.append(water)                                
+
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_SPACE]:
+        column = mouse_pos[0] // grid_size
+        row = mouse_pos[1] // grid_size
+        water = Water(grid_size * column, grid_size * row, grid_size)
+        waters.append(water)                                
     
     current_time = pygame.time.get_ticks()
     if current_time - last_time >= time_step:
