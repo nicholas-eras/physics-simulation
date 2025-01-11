@@ -28,6 +28,14 @@ class Water(pygame.Rect):
         super().__init__(pygame.Rect(x, y, size, size))
         self.is_moving_sideways_already = False
         self.direction = 1
+        self.current_pos = (x, y)
+        self.previous_pos = None
+
+    def __str__(self):
+        # Representação amigável para o usuário
+        return f"Water(x={self.x}, y={self.y}, width={self.width}, height={self.height}, " \
+               f"is_moving_sideways_already={self.is_moving_sideways_already}, direction={self.direction}, current_pos={self.current_pos}, previous_pos{self.previous_pos})"
+
 
 def move_water_blocks():
     occupied_waters = {(water.x, water.y) for water in waters}
@@ -36,28 +44,64 @@ def move_water_blocks():
     occupied_position = occupied_blocks | occupied_waters
 
     for water in waters:
+        if water.is_moving_sideways_already and water.y + grid_size != height:
+            water.previous_pos = (water.x, water.y)
+
         move_water_vertically = True
         move_water_horizontally = False
 
         if water.y + grid_size == height:
-            move_water_vertically = False
+            move_water_vertically = False            
 
         if water.x == 0 or water.x + grid_size == width:
             move_water_horizontally = False   
+            water.is_moving_sideways_already = False
+
                 
         if ((water.x, water.y + grid_size) in occupied_position):
             move_water_vertically = False
-            if (water.x +water.direction* grid_size, water.y) not in occupied_position:
+            if (water.x + water.direction* grid_size, water.y) not in occupied_position:
                 if water.direction == 1:
                     if water.x +water.direction* grid_size >= width:
                         continue
                 if water.direction == -1:
                     if water.x +water.direction* grid_size < 0:
                         continue
+                               
                 move_water_horizontally = True
+                water.is_moving_sideways_already = True
+
+        if (water.x - water.direction* grid_size, water.y) not in occupied_position and not water.is_moving_sideways_already:
+                    water.direction *= -1
+                    move_water_horizontally = True
+                    water.is_moving_sideways_already = True
+
+        if (water.x + water.direction* grid_size, water.y) not in occupied_position and not water.is_moving_sideways_already:
+                    move_water_horizontally = True                    
+                    water.is_moving_sideways_already = True
+
+
+        if (water.x + water.direction* grid_size, water.y) in blocks:                        
+            move_water_horizontally = False
+            water.is_moving_sideways_already = False
+
+        if (water.x + water.direction* grid_size, water.y) in waters:
+            next_water = waters[waters.index((water.x + water.direction* grid_size, water.y))]
+            if not next_water.is_moving_sideays_already:
+                move_water_horizontally = False
+                water.is_moving_sideways_already = False
+        
+        if (water.x, water.y + grid_size) in occupied_blocks:
+            move_water_vertically = False
+
 
         if move_water_vertically:
             water.y += grid_size
+            water.previous_pos = water.current_pos
+            water.current_pos = (water.x, water.y)
+
+            move_water_horizontally = False
+            water.is_moving_sideways_already = False
 
         if move_water_horizontally:
             if not water.is_moving_sideways_already:
@@ -65,6 +109,13 @@ def move_water_blocks():
                 water.is_moving_sideways_already = True
                 water.direction = moviment_direction
             water.x = water.x +  water.direction*grid_size 
+                        
+            water.previous_pos = water.current_pos
+            water.current_pos = (water.x, water.y)
+
+            
+        if (water.current_pos == water.previous_pos):
+            water.is_moving_sideways_already = False
 
 for y in range(height // grid_size):
     row = []
@@ -109,7 +160,15 @@ while running:
         column = mouse_pos[0] // grid_size
         row = mouse_pos[1] // grid_size
         block = Water(grid_size * column, grid_size * row, grid_size)
-        blocks.append(block)
+        if block not in blocks:
+            blocks.append(block)
+            
+    if pygame.mouse.get_pressed()[1]:
+        column = mouse_pos[0] // grid_size
+        row = mouse_pos[1] // grid_size
+        block = Water(grid_size * column, grid_size * row, grid_size)
+        if block in waters:
+            print(waters[waters.index(block)])
 
     if pygame.mouse.get_pressed()[2]:
         column = mouse_pos[0] // grid_size
