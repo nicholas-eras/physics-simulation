@@ -21,6 +21,7 @@ num_grids = (width // grid_size) * (height // grid_size)
 grid_empty_color = (0, 0, 0)
 grids = []
 waters = []
+blocks = []
 
 class Water(pygame.Rect):
     def __init__(self, x, y, size):
@@ -29,7 +30,10 @@ class Water(pygame.Rect):
         self.direction = 1
 
 def move_water_blocks():
-    occupied_position = {(water.x, water.y) for water in waters}
+    occupied_waters = {(water.x, water.y) for water in waters}
+    occupied_blocks = {(block.x, block.y) for block in blocks}
+
+    occupied_position = occupied_blocks | occupied_waters
 
     for water in waters:
         move_water_vertically = True
@@ -81,8 +85,12 @@ while running:
     for row in grids:
         for grid in row:
             pygame.draw.rect(screen, (10, 10, 10), grid, 1)
+
     for water in waters:
         pygame.draw.rect(screen, (0, 0, 120), water)
+
+    for block in blocks:
+        pygame.draw.rect(screen, (120, 120, 120), block)
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -95,14 +103,26 @@ while running:
         column = mouse_pos[0] // grid_size
         row = mouse_pos[1] // grid_size
         water = Water(grid_size * column, grid_size * row, grid_size)
-        waters.append(water)                                
+        waters.append(water)
+
+    if pygame.mouse.get_pressed()[0]:
+        column = mouse_pos[0] // grid_size
+        row = mouse_pos[1] // grid_size
+        block = Water(grid_size * column, grid_size * row, grid_size)
+        blocks.append(block)
+
+    if pygame.mouse.get_pressed()[2]:
+        column = mouse_pos[0] // grid_size
+        row = mouse_pos[1] // grid_size
+        block = Water(grid_size * column, grid_size * row, grid_size)
+        if block in blocks:
+            blocks.remove(block)
     
     current_time = pygame.time.get_ticks()
     if current_time - last_time >= time_step:
         move_water_blocks()
         last_time = current_time
 
- 
     pygame.display.flip()
 
 pygame.quit()
