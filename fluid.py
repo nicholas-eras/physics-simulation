@@ -1,5 +1,4 @@
-from textwrap import indent
-import pygame, math, random
+import pygame, random
 
 pygame.init()
 
