@@ -26,6 +26,7 @@ class Snake(pygame.Rect):
                 f"changed_direction_at={self.changed_direction_at}, "
                 f"changed_direction_to={self.changed_direction_to}), "
                 f"current_pos={self.get_pos()}")
+
 pygame.init()
 
 width, height = 1200, 600
@@ -34,12 +35,12 @@ pygame.display.set_caption("Snake Game")
 
 mouse_pos = (0, 0)
 
-grid_size = 300
+grid_size = 30
 
 background_color = (30, 30, 30)
 running = True
 
-num_grids = (width // grid_size) * (height // grid_size)
+num_grids = (width // grid_size) * (height // grid_size) - 2
 grid_empty_color = (0, 0, 0)
 grids = []
 snake_color = (0, 180, 0)
@@ -57,14 +58,14 @@ snake = [
     ]
 
 last_time = 0
-time_step = 500 #100ms
+time_step = 100 #100ms
 snake_directions = {"cima":0, "esquerda":1, "baixo":2, "direita":3}
 
 while True:
-    random_row = random.randint(0, width // grid_size)
-    random_column =  random.randint(0, height // grid_size)
-    if Snake(random_row*grid_size, random_column*grid_size, grid_size) not in snake:
-        food = pygame.Rect(random_row*grid_size, random_column, grid_size, grid_size)
+    random_row = random.randint(1, width // grid_size)
+    random_column =  random.randint(1, height // grid_size)
+    if Snake((random_row-1)*grid_size, (random_column-1)*grid_size, grid_size) not in snake:
+        food = pygame.Rect((random_row-1)*grid_size, (random_column-1)*grid_size, grid_size, grid_size)
         break
 
 def move_snake(): 
@@ -97,6 +98,23 @@ def change_head_direction_to(direction):
         return
     snake[0].direction = direction
 
+def check_if_new_body_out_screen(new_body_part_x, new_body_part_y):
+    snake_body_parts_position = [(snake_body_part.x, snake_body_part.y) for snake_body_part in snake]
+    if not 0 <= new_body_part_x < width or not 0 <= new_body_part_y < height:
+        new_body_part_x = snake_last_body_part.x
+        new_body_part_y = snake_last_body_part.y + grid_size
+        if not 0 <= new_body_part_x < width or not 0 <= new_body_part_y < height or (new_body_part_x, new_body_part_y) in snake_body_parts_position:
+            new_body_part_x = snake_last_body_part.x
+            new_body_part_y = snake_last_body_part.y - grid_size
+            if not 0 <= new_body_part_x < width or not 0 <= new_body_part_y < height or (new_body_part_x, new_body_part_y) in snake_body_parts_position:
+                new_body_part_x = snake_last_body_part.x + grid_size
+                new_body_part_y = snake_last_body_part.y
+                if not 0 <= new_body_part_x < width or not 0 <= new_body_part_y < height or (new_body_part_x, new_body_part_y) in snake_body_parts_position:
+                    new_body_part_x = snake_last_body_part.x - grid_size
+                    new_body_part_y = snake_last_body_part.y
+                
+    return new_body_part_x, new_body_part_y
+
 for y in range(height // grid_size):
     row = []
     for x in range(width // grid_size):        
@@ -128,13 +146,9 @@ while running:
     for snake_body in snake:
         pygame.draw.rect(screen, snake_color, snake_body, 0)
 
-    for snake_body in snake:        
-        if (snake_body.x >= width or snake_body.x < 0) or (snake_body.y >= height or snake_body.y  < 0) :
-            print("1", snake_body.x >= width)
-            print('2',  snake_body.x < 0)
-            print('3', snake_body.y >= height )
-            print('4', snake_body.y  < 0)
-            print(snake_body, "\n")
+    for i, snake_body in enumerate(snake):        
+        if (snake_body.x >= width or snake_body.x < 0) or (snake_body.y > height or snake_body.y  < 0) :   
+
             running = False
 
         if snake_body is not snake[0]:
@@ -153,33 +167,38 @@ while running:
     if keys[pygame.K_d]:
         change_head_direction_to("direita")        
 
-    if snake[0].colliderect(food):
+    if snake[0].colliderect(food):                    
+        snake_last_body_part = snake[-1]            
+        match snake_last_body_part.direction:
+            case "cima":    
+                new_body_part_x = snake_last_body_part.x
+                new_body_part_y = snake_last_body_part.y + grid_size                        
+            case "esquerda":    
+                new_body_part_x = snake_last_body_part.x + grid_size
+                new_body_part_y = snake_last_body_part.y 
+            case "baixo":    
+                new_body_part_x = snake_last_body_part.x
+                new_body_part_y = snake_last_body_part.y - grid_size
+            case "direita":    
+                new_body_part_x = snake_last_body_part.x - grid_size
+                new_body_part_y = snake_last_body_part.y
+
+        new_body_part_x, new_body_part_y = check_if_new_body_out_screen(new_body_part_x, new_body_part_y)
+        snake.append(Snake(new_body_part_x, new_body_part_y, grid_size, snake[-1].previous_direction))
+
         while True:
-            if num_grids == 0:
+            if num_grids < 1:
                 print("ganhooo")
+                running = False
+                break
+                
             random_row = random.randint(1, width // grid_size)
             random_column =  random.randint(1, height // grid_size)
-            if Snake(random_row*grid_size, random_column*grid_size, grid_size) not in snake:                
+            if Snake((random_row-1)*grid_size, (random_column-1)*grid_size, grid_size) not in snake:                
                 food = pygame.Rect((random_row - 1)*grid_size, (random_column-1)*grid_size, grid_size, grid_size)
-
-                snake_last_body_part = snake[-1]            
-                match snake_last_body_part.direction:
-                    case "cima":    
-                        new_body_part_x = snake_last_body_part.x
-                        new_body_part_y = snake_last_body_part.y + grid_size
-                    case "esquerda":    
-                        new_body_part_x = snake_last_body_part.x + grid_size
-                        new_body_part_y = snake_last_body_part.y 
-                    case "baixo":    
-                        new_body_part_x = snake_last_body_part.x
-                        new_body_part_y = snake_last_body_part.y - grid_size
-                    case "direita":    
-                        new_body_part_x = snake_last_body_part.x - grid_size
-                        new_body_part_y = snake_last_body_part.y     
-
-                snake.append(Snake(new_body_part_x, new_body_part_y, grid_size, snake[-1].direction))
                 num_grids -= 1
                 break
+            
 
     pygame.display.flip()
 
