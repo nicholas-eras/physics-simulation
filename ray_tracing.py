@@ -15,12 +15,12 @@ num_lines = 100
 
 angle_step = 2 * math.pi  / num_lines
 
-num_polygon = 3
+num_polygon = 1
 polygon_size = 100
 polygons = []
 for _ in range(num_polygon):
-    polygon_position = (random.randint(0, width - polygon_size), random.randint(0, height - polygon_size))
-    # polygon_position = (400, 300)
+    # polygon_position = (random.randint(0, width - polygon_size), random.randint(0, height - polygon_size))
+    polygon_position = (400, 300)
     polygon_vertices = [
         polygon_position,
         (polygon_position[0], polygon_position[1] + polygon_size),
@@ -39,17 +39,6 @@ def obtain_quadrant(x, y):
         return 3
     if x > 0 and y < 0:
         return 4
-    
-def normalize_angle(angle, x, y):
-    match obtain_quadrant(x, y):
-        case 1:
-            return angle 
-        case 2:
-            return angle + math.pi / 2
-        case 3:
-            return angle + math.pi
-        case 4:
-            return angle + 3*math.pi/2
 
 def is_mouse_inside_polygon(mouse_pos, polygon):    
     if polygon[0][0] < mouse_pos[0] < polygon[2][0] and polygon[0][1] < mouse_pos[1] < polygon[1][1]:
@@ -142,6 +131,19 @@ while running:
                 angulo_line_horizontal += 360 
            
             if is_angle_between(angulo_line_horizontal, angulo_menor, angulo_maior, polygon, mouse_pos):
+                angle_until_center = math.atan2((polygon[0][1] + polygon_size / 2) - mouse_pos[1],(polygon[0][0] + polygon_size / 2) - mouse_pos[0])
+                if angulo_line_horizontal > angle_until_center:
+                    pos_x = polygon[0][0]
+                    pos_y = math.tan(angulo_line_horizontal) * (pos_x - mouse_pos[0])
+                elif angulo_line_horizontal == angle_until_center:
+                    pos_x = polygon[0][0]
+                    pos_y = polygon[2][1]
+                else:
+                    pos_y = polygon[2][1]
+                    if math.tan(angulo_line_horizontal) == 0:
+                        pos_x = polygon[0][0]
+                    else:
+                        pos_x =  (mouse_pos[1] - pos_y) / math.tan(angulo_line_horizontal)
                 draw_line = False                             
     
         if not draw_line:        
