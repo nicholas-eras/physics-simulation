@@ -34,7 +34,7 @@ pygame.display.set_caption("Snake Game")
 
 mouse_pos = (0, 0)
 
-grid_size = 30
+grid_size = 300
 
 background_color = (30, 30, 30)
 running = True
@@ -43,17 +43,28 @@ num_grids = (width // grid_size) * (height // grid_size)
 grid_empty_color = (0, 0, 0)
 grids = []
 snake_color = (0, 180, 0)
-snake = [Snake(width // 2, height // 2, grid_size)]
+snake = [
+    Snake(width // 2, height // 2, grid_size),
+    # Snake(width // 2 - 1 * grid_size, height // 2, grid_size),
+    # Snake(width // 2- 2 * grid_size, height // 2, grid_size),
+    # Snake(width // 2- 3 * grid_size, height // 2, grid_size),
+    # Snake(width // 2- 4 * grid_size, height // 2, grid_size),
+    # Snake(width // 2- 5 * grid_size, height // 2, grid_size),
+    # Snake(width // 2- 6 * grid_size, height // 2, grid_size),
+    # Snake(width // 2- 7 * grid_size, height // 2, grid_size),
+    # Snake(width // 2- 8 * grid_size, height // 2, grid_size),
+    # Snake(width // 2- 9 * grid_size, height // 2, grid_size)
+    ]
 
 last_time = 0
-time_step = 100 #100ms
+time_step = 500 #100ms
 snake_directions = {"cima":0, "esquerda":1, "baixo":2, "direita":3}
 
 while True:
     random_row = random.randint(0, width // grid_size)
     random_column =  random.randint(0, height // grid_size)
     if Snake(random_row*grid_size, random_column*grid_size, grid_size) not in snake:
-        food = pygame.Rect(width // 2 + 4 * grid_size, height // 2, grid_size, grid_size)
+        food = pygame.Rect(random_row*grid_size, random_column, grid_size, grid_size)
         break
 
 def move_snake(): 
@@ -71,7 +82,7 @@ def move_snake():
             case "baixo":    
                 snake_block.y += grid_size
             case "direita":    
-                snake_block.x += grid_size
+                snake_block.x += grid_size                
 
 def update_snake_blocks_direction():
     for i, snake_block in enumerate(snake):
@@ -117,6 +128,19 @@ while running:
     for snake_body in snake:
         pygame.draw.rect(screen, snake_color, snake_body, 0)
 
+    for snake_body in snake:        
+        if (snake_body.x >= width or snake_body.x < 0) or (snake_body.y >= height or snake_body.y  < 0) :
+            print("1", snake_body.x >= width)
+            print('2',  snake_body.x < 0)
+            print('3', snake_body.y >= height )
+            print('4', snake_body.y  < 0)
+            print(snake_body, "\n")
+            running = False
+
+        if snake_body is not snake[0]:
+            if snake[0].colliderect(snake_body):
+                running = False
+
     pygame.draw.rect(screen, (180, 0, 0), food)
 
     keys = pygame.key.get_pressed()
@@ -131,11 +155,13 @@ while running:
 
     if snake[0].colliderect(food):
         while True:
+            if num_grids == 0:
+                print("ganhooo")
             random_row = random.randint(1, width // grid_size)
             random_column =  random.randint(1, height // grid_size)
-            if Snake(random_row*grid_size, random_column*grid_size, grid_size) not in snake:
+            if Snake(random_row*grid_size, random_column*grid_size, grid_size) not in snake:                
                 food = pygame.Rect((random_row - 1)*grid_size, (random_column-1)*grid_size, grid_size, grid_size)
-                print(food)
+
                 snake_last_body_part = snake[-1]            
                 match snake_last_body_part.direction:
                     case "cima":    
@@ -149,17 +175,10 @@ while running:
                         new_body_part_y = snake_last_body_part.y - grid_size
                     case "direita":    
                         new_body_part_x = snake_last_body_part.x - grid_size
-                        new_body_part_y = snake_last_body_part.y
-
-                for i, snake_block in enumerate(snake):
-                    if i == 0:
-                        previous_direction = snake_block.direction                            
-                        momentary_direction = snake_block.direction
-                    else:
-                        snake_block.direction = previous_direction
-                        previous_direction = momentary_direction     
+                        new_body_part_y = snake_last_body_part.y     
 
                 snake.append(Snake(new_body_part_x, new_body_part_y, grid_size, snake[-1].direction))
+                num_grids -= 1
                 break
 
     pygame.display.flip()
