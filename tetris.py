@@ -14,7 +14,7 @@ os.environ['SDL_VIDEO_CENTERED'] = '1'
 
 # Cria a janela
 janela = pygame.display.set_mode((largura, altura))
-pygame.display.set_caption("Janela Vertical com Quadrado Vermelho")
+pygame.display.set_caption("MyTetris")
 
 fundo = (30, 30, 30)
 cinza = (120, 120, 120)
@@ -72,72 +72,72 @@ tile_types = {
         "y_index_offset": 1,
         "color": amarelo
     },
-    "s":{
-        "blocks":[
-            {
-                "x_index": -1,
-                "y_index": 1,
-            },
-            {
-                "x_index": 0,
-                "y_index": 1,
-            },
-            {
-                "x_index": 0,
-                "y_index": 0,
-            },
-            {
-                "x_index": 1,
-                "y_index": 0,
-            },
-        ],
-        "y_index_offset": 1,
-        "color": azul
-    },
-    "l":{
-        "blocks":[
-            {
-                "x_index": 0,
-                "y_index": 0,
-            },
-            {
-                "x_index": 0,
-                "y_index": 1,
-            },
-            {
-                "x_index": 0,
-                "y_index": 2,
-            },
-            {
-                "x_index": 1,
-                "y_index": 2,
-            },
-        ],
-        "y_index_offset": 1,
-        "color": verde
-    },
-    "t":{
-        "blocks":[
-            {
-                "x_index": -1,
-                "y_index": 0,
-            },
-            {
-                "x_index": 0,
-                "y_index": 0,
-            },
-            {
-                "x_index": 1,
-                "y_index": 0,
-            },
-            {
-                "x_index": 0,
-                "y_index": 1,
-            },
-        ],
-        "y_index_offset": 1,
-        "color": roxo
-    },
+    # "s":{
+    #     "blocks":[
+    #         {
+    #             "x_index": -1,
+    #             "y_index": 1,
+    #         },
+    #         {
+    #             "x_index": 0,
+    #             "y_index": 1,
+    #         },
+    #         {
+    #             "x_index": 0,
+    #             "y_index": 0,
+    #         },
+    #         {
+    #             "x_index": 1,
+    #             "y_index": 0,
+    #         },
+    #     ],
+    #     "y_index_offset": 1,
+    #     "color": azul
+    # },
+    # "l":{
+    #     "blocks":[
+    #         {
+    #             "x_index": 0,
+    #             "y_index": 0,
+    #         },
+    #         {
+    #             "x_index": 0,
+    #             "y_index": 1,
+    #         },
+    #         {
+    #             "x_index": 0,
+    #             "y_index": 2,
+    #         },
+    #         {
+    #             "x_index": 1,
+    #             "y_index": 2,
+    #         },
+    #     ],
+    #     "y_index_offset": 1,
+    #     "color": verde
+    # },
+    # "t":{
+    #     "blocks":[
+    #         {
+    #             "x_index": -1,
+    #             "y_index": 0,
+    #         },
+    #         {
+    #             "x_index": 0,
+    #             "y_index": 0,
+    #         },
+    #         {
+    #             "x_index": 1,
+    #             "y_index": 0,
+    #         },
+    #         {
+    #             "x_index": 0,
+    #             "y_index": 1,
+    #         },
+    #     ],
+    #     "y_index_offset": 1,
+    #     "color": roxo
+    # },
 }
 
 tiles_types_list = [type for type in tile_types]
@@ -165,13 +165,14 @@ class Tile:
         return [[b["x_index"], b["y_index"], self.tile_id] for b in self.blocks()]
     
     def lowest_point(self):
-        return max([index["y_index"] for index in tile_types[self.type]["blocks"]]) + self.y_index
+        return max([index["y_index"] for index in self.tile_types_copy["blocks"]]) + self.y_index
     
     def get_y_positions(self):
         return {b["y_index"] for b in self.blocks()}
     
-    def __str__(self):        
-        return f"{[x_index, y_index, tile.tile_id]}"
+    def __str__(self):
+        print(self.blocks())
+        return f"{self.tile_id}"
 
 tiles = []
 
@@ -195,19 +196,22 @@ def check_line_filled(y_index):
 
     for occupied_block in occupied_blocks:
         if occupied_block[1] ==  y_index:
-            counter += 1
+            counter += 1            
             blocks_to_remove.add(occupied_block[2])
         if counter == number_cols:  
             occupied_blocks = []
-   
             for tile in tiles:
                 if tile.tile_id in blocks_to_remove:
-                    print(tile.occupied_blocks())
                     teste = [block for block in tile.tile_types_copy["blocks"] if block["y_index"] + tile.y_index  != y_index ]
+                    if tile.tile_id == 8:
+                        print(tile)
+                        print(blocks_to_remove, y_index)
+                        print(teste)
                     tile.tile_types_copy["blocks"] = teste
-                    print(tile.occupied_blocks())
-                    print("")
                     occupied_blocks.extend(tile.occupied_blocks())
+
+                if tile.tile_types_copy["blocks"] == []:
+                    tiles.remove(tile)
 
 while rodando:
     #Cliques
@@ -237,15 +241,15 @@ while rodando:
                 block_can_move = False
                 block_coordinate = [block["x_index"], block["y_index"], tile.tile_id]
                 block_coordinate_future = [block["x_index"], block["y_index"] + 1, tile.tile_id]    
-                if block_coordinate_future[:2] not in [ob[:2] for ob in occupied_blocks if ob[2] != tile.tile_id]:                                         
-                    block_can_move = True
-
+              
                 if tile.lowest_point() < number_rows - 1 and tile.is_moving:
+                 
                     if block_coordinate_future[:2] in [ob[:2] for ob in occupied_blocks if ob[2] != tile.tile_id]:                                         
                         tile.is_moving = False
                         block_can_move = False
                         for y_index in tile.get_y_positions():
                             check_line_filled(y_index)
+
                 elif not block_can_move:
                     tile.is_moving = False
                     block_can_move = False
@@ -253,12 +257,18 @@ while rodando:
                         check_line_filled(y_index)
 
                 if tile.lowest_point() >= number_rows - 1: 
+                 
                     tile.is_moving = False
                     block_can_move = False
-                    for y_index in tile.get_y_positions():
-                        check_line_filled(y_index)
-                tile_can_move.append(block_can_move)
 
+                for y_index in tile.get_y_positions():
+                    check_line_filled(y_index)
+        
+                if block_coordinate_future[:2] not in [ob[:2] for ob in occupied_blocks if ob[2] != tile.tile_id] and not tile.lowest_point() >= number_rows - 1:                                         
+                    block_can_move = True                    
+
+                tile_can_move.append(block_can_move)
+                
             if  tile.is_moving or (all(tile_can_move) and tile_can_move != []):
                 tile.y_index += 1
                 tile.is_moving = True
